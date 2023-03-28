@@ -121,6 +121,87 @@ impl Request {
         }
     }
 
+    fn get_value(header: *const ngx_table_elt_t) -> Option<String> {
+        if header.is_null() {
+            None
+        } else {
+            let value = unsafe { NgxStr::from_ngx_str((*header).value).to_string_lossy().to_string() };
+            if value.is_empty() {
+                None
+            } else {
+                Some(value)
+            }
+        }
+    }
+
+    fn get_value_from_part(headers: ngx_list_t, header_name: &str) -> Option<String> {
+        unsafe {
+            let mut part = headers.part;
+            let mut h = part.elts as *mut ngx_table_elt_t;
+            let mut i = 0;
+            let mut name = header_name.to_string();
+            loop {
+                if i >= part.nelts {
+                    if part.next.is_null() {
+                        break;
+                    }
+                    part = *part.next;
+                    h = part.elts as *mut ngx_table_elt_t;
+                    i = 0;
+                }
+                let header = *h.add(i);
+                if ngx_strncasecmp(header.key.data, name.as_mut_ptr(), header.key.len) != 0 {
+                    i += 1;
+                    continue;
+                }
+                let s = std::slice::from_raw_parts(header.value.data, header.value.len as usize);
+                let name = String::from_utf8_lossy(s);
+                return Some(name.to_string());
+            }
+            None
+        }
+    }
+
+    pub fn get_header_hash(&self) -> Option<String> {
+        unsafe {
+            let mut part = self.0.headers_in.headers.part;
+            let mut h = part.elts as *mut ngx_table_elt_t;
+            let mut i = 0;
+            let mut headers = "".to_string();
+            loop {
+                if i >= part.nelts {
+                    if part.next.is_null() {
+                        break;
+                    }
+                    part = *part.next;
+                    h = part.elts as *mut ngx_table_elt_t;
+                    i = 0;
+                }
+                let header = *h.add(i);
+                let s = std::slice::from_raw_parts(header.key.data, header.key.len as usize);
+                let name = String::from_utf8_lossy(s);
+                let s = std::slice::from_raw_parts(header.value.data, header.value.len as usize);
+                let value =  String::from_utf8_lossy(s);
+                headers = format!("{},{}={}", headers, name, value);
+                i += 1;
+            }
+    
+            Some(headers)
+        }
+    }
+
+    pub fn get_header(&self, header: &str) -> Option<String> {
+        let lower = header.to_ascii_lowercase();
+        let header = lower.as_str();
+        match header {
+            "host" => Self::get_value(self.0.headers_in.host),
+            "user-agent" | "user_agent" => Self::get_value(self.0.headers_in.user_agent),
+            "referer" => Self::get_value(self.0.headers_in.referer),
+            "accept_language" | "accept-language" => Self::get_value(self.0.headers_in.accept_language),
+            _ => Self::get_value_from_part(self.0.headers_in.headers, header),
+        }
+    }
+
     /// Set HTTP status of response.
     pub fn set_status(&mut self, status: HTTPStatus) {
         self.0.headers_out.status = status.into();
