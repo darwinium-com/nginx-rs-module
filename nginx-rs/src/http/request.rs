@@ -53,20 +53,25 @@ impl Request {
         self.0.connection
     }
 
-    pub fn remote_address(&self) -> &NgxStr {
+    pub fn remote_address(&self) -> Option<String> {
         unsafe {
             let connection = self.0.connection;
             let sockaddr = (*connection).sockaddr;
             let socklen = (*connection).socklen;
             const IP_MAX_LEN: u64 = 128;  // should be enough for ipv4 and ipv6
             let p = ngx_pnalloc(self.0.pool, IP_MAX_LEN);
-            if !p.is_null() {
+            if p.is_null() {
+                None
+            } else {
                 let buf = p as *mut u8;
                 let len = ngx_sock_ntop(sockaddr, socklen, buf, IP_MAX_LEN, 1);
                 let s = std::slice::from_raw_parts(buf, len as usize);
-                s.into()
-            } else {
-                "".into()
+                let addr = String::from_utf8_lossy(s);
+                if addr.is_empty() {
+                    None
+                } else {
+                    Some(addr.to_string())
+                }
             }
         }
     }
