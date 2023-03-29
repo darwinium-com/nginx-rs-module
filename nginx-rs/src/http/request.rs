@@ -162,12 +162,12 @@ impl Request {
         }
     }
 
-    pub fn get_header_hash(&self) -> Option<String> {
+    pub fn get_header_names(&self) -> Option<String> {
         unsafe {
             let mut part = self.0.headers_in.headers.part;
             let mut h = part.elts as *mut ngx_table_elt_t;
             let mut i = 0;
-            let mut headers = "".to_string();
+            let mut h_vec = Vec::new();
             loop {
                 if i >= part.nelts {
                     if part.next.is_null() {
@@ -180,13 +180,23 @@ impl Request {
                 let header = *h.add(i);
                 let s = std::slice::from_raw_parts(header.key.data, header.key.len as usize);
                 let name = String::from_utf8_lossy(s);
+                if !name.is_empty() {
+                    h_vec.push(name);
+                }
+                /* only names, no values
                 let s = std::slice::from_raw_parts(header.value.data, header.value.len as usize);
                 let value =  String::from_utf8_lossy(s);
-                headers = format!("{},{}={}", headers, name, value);
+                */
+                // TODO we may need values in hash at some point, but need filter out some values
+                // which change all the time
                 i += 1;
             }
-    
-            Some(headers)
+            if h_vec.is_empty() {
+                None
+            } else {
+                let headers = h_vec.join(" ");
+                Some(headers)
+            }
         }
     }
 
@@ -198,6 +208,9 @@ impl Request {
             "user-agent" | "user_agent" => Self::get_value(self.0.headers_in.user_agent),
             "referer" => Self::get_value(self.0.headers_in.referer),
             "accept_language" | "accept-language" => Self::get_value(self.0.headers_in.accept_language),
+            "content-type" | "content_type" => Self::get_value(self.0.headers_in.content_type),
+            "content-length" | "content_length" => Self::get_value(self.0.headers_in.content_length),
+            "accept" => Self::get_value(self.0.headers_in.accept),
             _ => Self::get_value_from_part(self.0.headers_in.headers, header),
         }
     }
