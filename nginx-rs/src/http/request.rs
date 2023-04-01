@@ -1,6 +1,5 @@
 use crate::{bindings::*, ngx_null_string};
 use crate::core::*;
-
 use crate::http::status::*;
 
 use std::os::raw::c_void;
@@ -217,6 +216,24 @@ impl Request {
             "content-length" | "content_length" => Self::get_value(self.0.headers_in.content_length),
             "accept" => Self::get_value(self.0.headers_in.accept),
             _ => Self::get_value_from_part(self.0.headers_in.headers, header),
+        }
+    }
+
+    pub fn set_header(&self, name: &str, value: &str) {
+        unsafe {
+            let mut pool = self.pool();
+            let n = pool.allocate::<String>(name.to_string()) as *mut u8;
+            let v = pool.allocate::<String>(value.to_string()) as *mut u8;
+
+            let n_str = ngx_str_t { len: name.len() as u64, data: n };
+            let v_str = ngx_str_t { len: value.len() as u64, data: v };
+
+            let mut headers = self.0.headers_out.headers;
+            let mut h = ngx_list_push(&mut headers as *mut ngx_list_t) as *mut ngx_table_elt_t;
+
+            (*h).hash = 1;
+            (*h).key = n_str;
+            (*h).value = v_str;
         }
     }
 
