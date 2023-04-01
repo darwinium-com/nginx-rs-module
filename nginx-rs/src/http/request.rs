@@ -219,21 +219,23 @@ impl Request {
         }
     }
 
-    pub fn set_header(&self, name: &str, value: &str) {
+    pub fn set_header(&self, name: &str, value: &str) -> bool {
         unsafe {
             let mut pool = self.pool();
-            let n = pool.create_buffer_from_str(name).unwrap().as_bytes_mut().as_mut_ptr();
-            let v = pool.create_buffer_from_str(value).unwrap().as_bytes_mut().as_mut_ptr();
+            if let (Some(mut n), Some(mut v)) = (pool.create_buffer_from_str(name), pool.create_buffer_from_str(value)) {
+                let n_str = ngx_str_t { len: name.len() as u64, data: n.as_bytes_mut().as_mut_ptr() };
+                let v_str = ngx_str_t { len: value.len() as u64, data: v.as_bytes_mut().as_mut_ptr() };
 
-            let n_str = ngx_str_t { len: name.len() as u64, data: n };
-            let v_str = ngx_str_t { len: value.len() as u64, data: v };
+                let mut headers = self.0.headers_out.headers;
+                let mut h = ngx_list_push(&mut headers as *mut ngx_list_t) as *mut ngx_table_elt_t;
 
-            let mut headers = self.0.headers_out.headers;
-            let mut h = ngx_list_push(&mut headers as *mut ngx_list_t) as *mut ngx_table_elt_t;
-
-            (*h).hash = 1;
-            (*h).key = n_str;
-            (*h).value = v_str;
+                (*h).hash = 1;
+                (*h).key = n_str;
+                (*h).value = v_str;
+                true
+            } else {
+                false
+            }
         }
     }
 
