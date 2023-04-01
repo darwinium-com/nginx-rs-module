@@ -222,8 +222,8 @@ impl Request {
     pub fn set_header(&self, name: &str, value: &str) {
         unsafe {
             let mut pool = self.pool();
-            let n = pool.allocate::<String>(name.to_string()) as *mut u8;
-            let v = pool.allocate::<String>(value.to_string()) as *mut u8;
+            let n = pool.create_buffer_from_str(name).unwrap().as_bytes_mut().as_mut_ptr();
+            let v = pool.create_buffer_from_str(value).unwrap().as_bytes_mut().as_mut_ptr();
 
             let n_str = ngx_str_t { len: name.len() as u64, data: n };
             let v_str = ngx_str_t { len: value.len() as u64, data: v };
