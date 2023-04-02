@@ -279,21 +279,30 @@ impl Request {
         }
     }
 
-    pub fn uri(&self) -> &NgxStr {
-        unsafe {
-            NgxStr::from_ngx_str(self.0.uri)
+    pub fn uri(&self) -> Option<String> {
+        let value = unsafe { NgxStr::from_ngx_str(self.0.uri).to_string_lossy().to_string() };
+        if value.is_empty() {
+            None
+        } else {
+            Some(value)
         }
     }
 
-    pub fn args(&self) -> &NgxStr {
-        unsafe {
-            NgxStr::from_ngx_str(self.0.args)
+    pub fn args(&self) -> Option<String> {
+        let value = unsafe { NgxStr::from_ngx_str(self.0.args).to_string_lossy().to_string() };
+        if value.is_empty() {
+            None
+        } else {
+            Some(value)
         }
     }
 
-    pub fn addr(&self) -> &NgxStr {
-        unsafe {
-            NgxStr::from_ngx_str((*self.0.connection).addr_text)
+    pub fn addr(&self) -> Option<String> {
+        let value = unsafe { NgxStr::from_ngx_str((*self.0.connection).addr_text).to_string_lossy().to_string() };
+        if value.is_empty() {
+            None
+        } else {
+            Some(value)
         }
     }
 }
