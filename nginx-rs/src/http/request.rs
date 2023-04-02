@@ -305,4 +305,8 @@ impl Request {
             Some(value)
         }
     }
+
+    pub fn http_version(&self) -> ngx_uint_t {
+        self.0.http_version
+    }
 }
