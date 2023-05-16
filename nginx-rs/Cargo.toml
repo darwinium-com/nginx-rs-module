@@ -16,4 +16,4 @@ categories = ["api-bindings", "web-programming::http-server"]
 [dependencies]
 
 [build-dependencies]
-bindgen = "0.60.1"
+bindgen = "*"
