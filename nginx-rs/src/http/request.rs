@@ -57,7 +57,7 @@ impl Request {
             let connection = self.0.connection;
             let sockaddr = (*connection).sockaddr;
             let socklen = (*connection).socklen;
-            const IP_MAX_LEN: u64 = 128;  // should be enough for ipv4 and ipv6
+            const IP_MAX_LEN: usize = 128;  // should be enough for ipv4 and ipv6
             let p = ngx_pnalloc(self.0.pool, IP_MAX_LEN);
             if p.is_null() {
                 None
@@ -223,8 +223,8 @@ impl Request {
         unsafe {
             let mut pool = self.pool();
             if let (Some(mut n), Some(mut v)) = (pool.create_buffer_from_str(name), pool.create_buffer_from_str(value)) {
-                let n_str = ngx_str_t { len: name.len() as u64, data: n.as_bytes_mut().as_mut_ptr() };
-                let v_str = ngx_str_t { len: value.len() as u64, data: v.as_bytes_mut().as_mut_ptr() };
+                let n_str = ngx_str_t { len: name.len(), data: n.as_bytes_mut().as_mut_ptr() };
+                let v_str = ngx_str_t { len: value.len(), data: v.as_bytes_mut().as_mut_ptr() };
 
                 let mut headers = self.0.headers_out.headers;
                 let mut h = ngx_list_push(&mut headers as *mut ngx_list_t) as *mut ngx_table_elt_t;

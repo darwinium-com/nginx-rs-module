@@ -13,7 +13,7 @@ impl Pool {
     }
 
     pub fn create_buffer(&mut self, size: usize) -> Option<TemporaryBuffer> {
-        let buf = unsafe { ngx_create_temp_buf(self.0, size as u64) };
+        let buf = unsafe { ngx_create_temp_buf(self.0, size) };
         if buf.is_null() {
             return None;
         }
@@ -65,7 +65,7 @@ impl Pool {
     }
 
     pub fn alloc(&mut self, size: usize) -> *mut c_void {
-        unsafe { ngx_palloc(self.0, size as u64) }
+        unsafe { ngx_palloc(self.0, size) }
     }
 
     pub fn alloc_type<T: Copy>(&mut self) -> *mut T {
@@ -73,7 +73,7 @@ impl Pool {
     }
 
     pub fn calloc(&mut self, size: usize) -> *mut c_void {
-        unsafe { ngx_pcalloc(self.0, size as u64) }
+        unsafe { ngx_pcalloc(self.0, size) }
     }
 
     pub fn calloc_type<T: Copy>(&mut self) -> *mut T {

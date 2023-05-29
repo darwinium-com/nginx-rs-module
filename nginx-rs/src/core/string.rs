@@ -13,7 +13,7 @@ use std::borrow::Cow;
 macro_rules! ngx_string {
     ($s:expr) => {
         {
-            ngx_str_t { len: $s.len() as u64, data: concat!($s, "\0").as_ptr() as *mut u8 }
+            ngx_str_t { len: $s.len(), data: concat!($s, "\0").as_ptr() as *mut u8 }
         }
     };
 }
