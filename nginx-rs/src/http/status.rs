@@ -16,5 +16,6 @@ impl Into<ngx_uint_t> for HTTPStatus {
 }
 
 pub const HTTP_OK: HTTPStatus = HTTPStatus(NGX_HTTP_OK as ngx_uint_t);
+pub const HTTP_NO_CONTENT: HTTPStatus = HTTPStatus(NGX_HTTP_NO_CONTENT as ngx_uint_t);
 pub const HTTP_INTERNAL_SERVER_ERROR: HTTPStatus = HTTPStatus(NGX_HTTP_INTERNAL_SERVER_ERROR as ngx_uint_t);
 pub const HTTP_FORBIDDEN: HTTPStatus = HTTPStatus(NGX_HTTP_FORBIDDEN as ngx_uint_t);
