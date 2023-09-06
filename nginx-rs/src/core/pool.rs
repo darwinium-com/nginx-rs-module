@@ -21,6 +21,17 @@ impl Pool {
         Some(TemporaryBuffer::from_ngx_buf(buf))
     }
 
+    pub fn create_buffer_from_vec(&mut self, data: &Vec<u8>) -> Option<TemporaryBuffer>
+    {
+        let mut buffer = self.create_buffer(data.len())?;
+        unsafe {
+            let mut buf = buffer.as_ngx_buf_mut();
+            ptr::copy_nonoverlapping(data.as_ptr(), (*buf).pos, data.len());
+            (*buf).last = (*buf).pos.add(data.len());
+        }
+        Some(buffer)
+    }
+
     pub fn create_buffer_from_str(&mut self, str: &str) -> Option<TemporaryBuffer>
     {
         let mut buffer = self.create_buffer(str.len())?;
